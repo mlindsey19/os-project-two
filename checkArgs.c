@@ -11,13 +11,15 @@
 
 static void helpMenu(){
     printf("/\n    Help\n");
+    printf("Default - max: 4, live: 2\n");
     printf("-h show help menu\n");
+    printf("-n max child processes ever\n");
+    printf("-s max child alive at one time\n");
     printf("-i specify input file name\n");
     printf("-o specify output file name\n");
 }
 
-int checkArgs(char * inFilename[], char * outFilename[], int argc, char **argv, int * maxEver, int * maxAlive ){
-
+int checkArgs(char * inFilename, char * outFilename, int argc, char **argv, int * maxEver, int * maxAlive ){
 
     int c,i;
 
@@ -29,21 +31,20 @@ int checkArgs(char * inFilename[], char * outFilename[], int argc, char **argv, 
                 helpMenu();
                 break;
             case 'n':
-                *maxEver = optarg;
+                *maxEver = (int) optarg;
                 break;
             case 's':
-                *maxAlive = optarg;
+                *maxAlive = (int) optarg;
                 break;
             case 'i':
-                *inFilename = optarg;
-                printf("from func: infile: %s\n", *inFilename);
+                inFilename = optarg;
                 break;
             case 'o':
-                *outFilename = optarg;
+                outFilename = optarg;
                 break;
             case '?':
                 if (optopt == 'i' || optopt == 'o')
-                    fprintf(stderr, "Options -o and -i require an argument.\n", optopt);
+                    fprintf(stderr, "Options -o and -i require an argument.\n");
                 else if (isprint (optopt))
                     fprintf(stderr, "Unknown option `-%c'.\n", optopt);
                 else
@@ -54,6 +55,6 @@ int checkArgs(char * inFilename[], char * outFilename[], int argc, char **argv, 
         }
 
     for (i = optind; i < argc; i++)
-        printf("Non-option argument %s\n", argv[i]);
+        fprintf(stderr,"Non-option argument %s\n", argv[i]);
     return 0;
 }
