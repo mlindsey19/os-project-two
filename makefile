@@ -5,7 +5,7 @@
 CC = gcc
 CFLAGS = -g -Wall
 
-OBJ1 = oss.o readfile.o checkArgs.o
+OBJ1 = oss.o readfile.o checkArgs.o clockMemory.o
 OBJ2 = user.o
 
 TARGET1 = oss

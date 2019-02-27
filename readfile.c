@@ -11,7 +11,6 @@ int  readfile(const char * infile,  int array[20][3])
 {
     int i, j; // iterator
     int eof;
-    char * buf;
     int timeIncrement;
 
     FILE * fptr = fopen(infile, "r");
