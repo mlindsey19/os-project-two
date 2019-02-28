@@ -31,10 +31,10 @@ int checkArgs(char * inFilename, char * outFilename, int argc, char **argv, int 
                 helpMenu();
                 break;
             case 'n':
-                *maxEver = (int) optarg;
+                *maxEver =  atoi(optarg);
                 break;
             case 's':
-                *maxAlive = (int) optarg;
+                *maxAlive =  atoi(optarg);
                 break;
             case 'i':
                 inFilename = optarg;
