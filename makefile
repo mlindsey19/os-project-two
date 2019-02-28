@@ -23,4 +23,4 @@ $(TARGET2): $(OBJ2)
 	$(CC) $(CFLAGS) -c $*.c -o $*.o
 
 clean:
-	rm $(TARGET1) $$(TARGET2) *.o output.txt
+	rm $(TARGET1) $(TARGET2) *.o output.txt

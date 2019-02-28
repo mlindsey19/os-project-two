@@ -13,14 +13,17 @@
 #include "clockMemory.h"
 #include <unistd.h>
 
-unsigned int alarm(unsigned int seconds);
 
 void incrementClock(int * , int );
 void cleanSHM();
 void sigHandle(int);
+void getStatus(int * , const int * );
+void sigchild();
 
 char * paddr;
 pid_t children[20];
+int active = 0;
+
 
 
 int main(int argc, char **argv) {
@@ -28,8 +31,7 @@ int main(int argc, char **argv) {
     char * infile = "input.txt";
     char * outfile = "output.txt";
     int  maxEver = 20;
-    int  maxAlive = 5;
-    int active = 0;
+    int  maxAlive = 6;
     int total = 0;
     int run = 1;
     int i;
@@ -50,9 +52,10 @@ int main(int argc, char **argv) {
     clock[0] = 0;
     clock[1] = 0;
 
-    alarm(110);
+    alarm(10);
     signal(SIGINT, sigHandle);
     signal(SIGALRM, sigHandle);
+    signal(SIGCHLD, sigchild);
 
     do {
 
@@ -68,19 +71,15 @@ int main(int argc, char **argv) {
                 perror("error forking new process");
                 return 1;
             }
-
-            if (getppid() == oss_pid) {
-                char durstr[10];
-                sprintf(durstr, "%i", timesForChildren[total][2]);
+            char durstr[10];
+            sprintf(durstr, "%i", timesForChildren[total][2]);
+            if (getppid() == oss_pid)
                 execl("./user", "user", durstr, NULL);
-            }
+            printf("simTime: %is_%in - childpid: %u - duration: %s\n", clock[0],clock[1], children[total], durstr);
             total++;
             active++;
         }
-        if (active == maxAlive) {
-            active--;
-           // wait(NULL);
-        }
+
 
         if (total == maxEver) {
             for (i = 0; i < active; i++)
@@ -88,7 +87,9 @@ int main(int argc, char **argv) {
             cleanSHM();
             break;
         }
-
+//        if (active == maxAlive) {
+//            getStatus(&active,&maxEver);
+//        }
 
     }while(run);
 
@@ -117,3 +118,7 @@ void cleanSHM(){
 void sigHandle(int cc){
     cleanSHM();
 }
+void sigchild(){
+    active--;
+};
+

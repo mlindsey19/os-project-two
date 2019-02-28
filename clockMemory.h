@@ -6,7 +6,7 @@
 #define LINDSEY_2_PARENT_H
 #define SHMKEY 63139 //shared memory key
 #define BUFF_SZ (sizeof(int) * 2)
-#define secWorthNancSec 999999999
+#define secWorthNancSec 1000000000
 char* getClockMem();
 void deleteMemory(char *);
 #endif //LINDSEY_2_PARENT_H

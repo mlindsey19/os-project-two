@@ -33,8 +33,8 @@ int main(int argc, char * argv[])
 
 
     while(simclock[0] <= stopTime0 && simclock[1] < stopTime1 );
-    printf("pid: %u system clock: %lu terminating\n",  getpid(), clock());
+    printf("pid: %u sim clock: %is_%in - terminating now\n",  getpid(),simclock[0], simclock[1]);
 
-    exit(1);
-    return 0;
+
+    exit(19);
 }
