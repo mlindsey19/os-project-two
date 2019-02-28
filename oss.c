@@ -23,7 +23,9 @@ char * paddr;
 pid_t children[20];
 int active = 0;
 int * clock;
-int  maxEver = 20;
+int  maxEver = 4;
+
+FILE* ofpt;
 
 
 
@@ -35,7 +37,7 @@ int main(int argc, char **argv) {
     int  maxActive = 2;
     int total = 0;
     int run = 1;
-int i;
+    int i;
     for(i=0; i<20; i++)
         children[i] = 0;
 
@@ -44,6 +46,8 @@ int i;
 
     maxActive = maxActive > 20 ? 20 :maxActive;
     maxEver = maxEver > 20 ? 20 :maxEver;
+    maxActive = maxEver < maxActive ? maxEver : maxActive;
+    printf("n %i   s %i\n", maxEver, maxActive);
 
     int  timeIncrement;
     int timesForChildren[20][3]; // seconds, nanoseconds, duration(ns)
@@ -61,6 +65,8 @@ int i;
     signal(SIGINT, sigHandle);
     signal(SIGALRM, sigHandle);
     signal(SIGCHLD, sigchild);
+
+    ofpt = fopen(outfile, "a");
 
     do {
 
@@ -80,20 +86,19 @@ int i;
             sprintf(durstr, "%i", timesForChildren[total][2]);
             if (getppid() == oss_pid)
                 execl("./user", "user", durstr, NULL);
-            printf("simTime: %is_%in - childpid: %u - duration: %s\n", clock[0],clock[1], children[total], durstr);
+            fprintf(ofpt,"simTime: %is_%in - childpid: %u - duration: %s\n", clock[0],clock[1], children[total], durstr);
             total++;
             active++;
         }
 
-
-        if (total == maxEver) {
-            cleanSHM();
+        if (total == maxEver && active == 0) {
+            wait(NULL);
             break;
         }
 
 
     }while(run);
-
+    cleanSHM();
 
     return 0;
 }
@@ -107,12 +112,10 @@ void incrementClock(int * clock, int timeIncrement){
 }
 
 void cleanSHM(){
+    fprintf(ofpt, "final clock time: %is %in\n", clock[0], clock[1]);
+    fclose(ofpt);
     deleteMemory(paddr);
-    int i;
-    pid_t pid;
-    for (i=0; i < maxEver; i++)
-       pid = waitpid(children[i], NULL, WNOHANG) ;
-        kill(pid, SIGTERM);
+
 
 }
 
@@ -123,6 +126,6 @@ void sigchild(){
     active--;
     pid_t pid;
     pid = wait(NULL);
-    printf("term pid:%u at %is %in\n",pid, clock[0], clock[1]);
+    fprintf(ofpt,"term pid:%u at %is %in\n",pid, clock[0], clock[1]);
 };
 

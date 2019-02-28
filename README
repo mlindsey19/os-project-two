@@ -1,0 +1,14 @@
+Mitch Lindsey
+
+this project simulates a clock by incrementing two integers in shared memeory
+time increment is read from file.
+
+children are fork and exec at desinated times
+times are read from file
+
+child runs for durration, also read from file
+and passed to child as argument. prints to stdout
+the time before it terminates
+
+parent checks for child to finish and print to outputfile
+
