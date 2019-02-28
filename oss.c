@@ -6,18 +6,34 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <wait.h>
+#include <assert.h>
+#include <stdlib.h>
 #include "readfile.h"
 #include "checkArgs.h"
 #include "clockMemory.h"
+#include <unistd.h>
+
+unsigned int alarm(unsigned int seconds);
+
+void incrementClock(int * , int );
+void cleanSHM();
+void sigHandle(int);
+
+char * paddr;
+pid_t children[20];
+
 
 int main(int argc, char **argv) {
 
     char * infile = "input.txt";
     char * outfile = "output.txt";
-    int  maxEver = 4;
-    int  maxAlive = 2;
+    int  maxEver = 10;
+    int  maxAlive = 5;
     int active = 0;
     int total = 0;
+    int run = 1;
+    int i;
+
 
     checkArgs(infile, outfile,  argc,  argv,  &maxEver, &maxAlive );
 
@@ -27,29 +43,77 @@ int main(int argc, char **argv) {
     timeIncrement = readfile(infile, timesForChildren); // returns value is clock incrementation time
 
     pid_t oss_pid = getpid();
-    pid_t cpid;
+
+    int * clock;
+    paddr = getClockMem();
+    clock = (int *) paddr;
+    clock[0] = 0;
+    clock[1] = 0;
+
+    alarm(10);
+    signal(SIGINT, sigHandle);
+    signal(SIGALRM, sigHandle);
+
+    do {
+
+        incrementClock(clock, timeIncrement);
+
+        if (clock[0] < timesForChildren[total][0] ||
+            (clock[0] <= timesForChildren[total][0] && clock[1] < timesForChildren[total][1]))
+            continue;
 
 
-    int  clock[2]= {0,0};
-    getClockMem(clock);
-    if (active < maxAlive)
-        do {
-            clock[1] += timeIncrement;
-            if (clock[1] > 999999999){
-                clock[0]++;
-                clock[1] = clock[1] - 999999999;
+        if (total < maxEver && active < maxAlive ) {
+            if ((children[total] = fork()) < 0) {
+                perror("error forking new process");
+                return 1;
             }
 
-            if (getpid() == oss_pid) {
-                if ((cpid = fork()) < 0) {
-                    perror("error forking new process");
-                    return 1;
-                } else {
-                    if (cpid == 0)
-                        execl("/user", "user", timesForChildren[total][2], NULL);
-                }
+            if (getppid() == oss_pid) {
+                char durstr[10];
+                sprintf(durstr, "%i", timesForChildren[total][2]);
+                execl("./user", "user", durstr, NULL);
             }
+            total++;
+            active++;
+        }
+        if (active == maxAlive) {
+            active--;
+           // wait(NULL);
+        }
 
-        }while(0);
+        if (total == maxEver) {
+            for (i = 0; i < active; i++)
+                wait(NULL);
+            cleanSHM();
+            break;
+        }
+
+
+    }while(run);
+
+    cleanSHM();
     return 0;
+}
+void incrementClock(int * clock, int timeIncrement){
+    clock[1] += timeIncrement;
+    if (clock[1] > secWorthNancSec){
+        clock[0]++;
+        clock[1] -= secWorthNancSec;
+        assert(clock[1]< 1000000000 && "too many nanoseconds");
+    }
+}
+
+void cleanSHM(){
+
+    deleteMemory(paddr);
+
+    int i;
+    for (i = 0; i <20; i++)
+        kill(children[i],SIGTERM);
+
+}
+
+void sigHandle(int cc){
+    cleanSHM();
 }
