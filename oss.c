@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
 
     char * infile = "input.txt";
     char * outfile = "output.txt";
-    int  maxEver = 10;
+    int  maxEver = 20;
     int  maxAlive = 5;
     int active = 0;
     int total = 0;
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     clock[0] = 0;
     clock[1] = 0;
 
-    alarm(10);
+    alarm(110);
     signal(SIGINT, sigHandle);
     signal(SIGALRM, sigHandle);
 
