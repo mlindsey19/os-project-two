@@ -6,6 +6,6 @@
 
 #ifndef LINDSEY_1_CHECKARGS_H
 #define LINDSEY_1_CHECKARGS_H
-int checkArgs(char * , char * , int , char **, int *, int *);
+int checkArgs(char ** , char ** , int , char **, int *, int *);
 
 #endif //LINDSEY_1_CHECKARGS_H

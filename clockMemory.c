@@ -6,11 +6,11 @@
 #include <stdio.h>
 #include "clockMemory.h"
 
-
+static int shmid;
 
 char * getClockMem(){
     char * paddr;
-    int shmid = shmget (SHMKEY, BUFF_SZ, 0777 | IPC_CREAT);
+     shmid = shmget (SHMKEY, BUFF_SZ, 0777 | IPC_CREAT);
 
     if (shmid == -1)
         perror("parent - error shmid");
@@ -21,5 +21,10 @@ char * getClockMem(){
 }
 
 void deleteMemory(char * paddr){
-    shmdt(paddr);
+    int er;
+
+    shmctl(shmid, IPC_RMID, NULL);
+    if((er = shmdt(paddr)) == -1){
+        perror("err shmdt:");
+    }
 }

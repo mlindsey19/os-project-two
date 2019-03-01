@@ -10,7 +10,7 @@
 
 
 static void helpMenu(){
-    printf("/\n    Help\n");
+    printf("\n\t\tHelp\n");
     printf("Default - max: 4, live: 2\n");
     printf("-h show help menu\n");
     printf("-n max child processes ever\n");
@@ -19,7 +19,7 @@ static void helpMenu(){
     printf("-o specify output file name\n");
 }
 
-int checkArgs(char * inFilename, char * outFilename, int argc, char **argv, int * maxEver, int * maxAlive ){
+int checkArgs(char * inFilename[], char * outFilename[], int argc, char **argv, int * maxEver, int * maxAlive ){
 
     int c,i;
 
@@ -37,10 +37,10 @@ int checkArgs(char * inFilename, char * outFilename, int argc, char **argv, int 
                 *maxAlive =  atoi(optarg);
                 break;
             case 'i':
-                inFilename = optarg;
+                *inFilename = optarg;
                 break;
             case 'o':
-                outFilename = optarg;
+                *outFilename = optarg;
                 break;
             case '?':
                 if (optopt == 'i' || optopt == 'o')

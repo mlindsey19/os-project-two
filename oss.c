@@ -12,6 +12,7 @@
 #include "checkArgs.h"
 #include "clockMemory.h"
 #include <unistd.h>
+#include <sys/shm.h>
 
 
 void incrementClock(int * , int );
@@ -25,8 +26,8 @@ int active = 0;
 int * clock;
 int  maxEver = 4;
 
-FILE* ofpt;
 
+FILE* ofpt;
 
 
 
@@ -41,13 +42,11 @@ int main(int argc, char **argv) {
     for(i=0; i<20; i++)
         children[i] = 0;
 
-    checkArgs(infile, outfile,  argc,  argv,  &maxEver, &maxActive );
-    printf("n %i   s %i\n", maxEver, maxActive);
+    checkArgs(&infile, &outfile,  argc,  argv,  &maxEver, &maxActive );
 
     maxActive = maxActive > 20 ? 20 :maxActive;
     maxEver = maxEver > 20 ? 20 :maxEver;
     maxActive = maxEver < maxActive ? maxEver : maxActive;
-    printf("n %i   s %i\n", maxEver, maxActive);
 
     int  timeIncrement;
     int timesForChildren[20][3]; // seconds, nanoseconds, duration(ns)
@@ -69,6 +68,9 @@ int main(int argc, char **argv) {
     ofpt = fopen(outfile, "a");
 
     do {
+        if (total == maxEver && active <= 0)
+            break;
+
 
         incrementClock(clock, timeIncrement);
 
@@ -91,10 +93,7 @@ int main(int argc, char **argv) {
             active++;
         }
 
-        if (total == maxEver && active == 0) {
-            wait(NULL);
-            break;
-        }
+
 
 
     }while(run);
@@ -112,10 +111,16 @@ void incrementClock(int * clock, int timeIncrement){
 }
 
 void cleanSHM(){
-    fprintf(ofpt, "final clock time: %is %in\n", clock[0], clock[1]);
-    fclose(ofpt);
-    deleteMemory(paddr);
+    int i;
+    for (i =0; i< maxEver; i++) {
+        if (children[i] > 0) {
 
+            kill(children[i], SIGTERM);
+        }
+    }
+    fprintf(ofpt, "final clock time: %is %in\n", clock[0], clock[1]);
+    deleteMemory(paddr);
+    fclose(ofpt);
 
 }
 
@@ -123,9 +128,21 @@ void sigHandle(int cc){
     cleanSHM();
 }
 void sigchild(){
-    active--;
     pid_t pid;
-    pid = wait(NULL);
-    fprintf(ofpt,"term pid:%u at %is %in\n",pid, clock[0], clock[1]);
+    int i, status;
+    for (i =0; i< maxEver; i++){
+        if (children[i] > 0){
+            pid = waitpid(children[i], &status, WNOHANG);
+            if (WIFEXITED(status) && WEXITSTATUS(status)== 19 && pid != 0){
+
+                children[i] = 0;
+                fprintf(ofpt,"term pid:%u at %is %in\n",pid, clock[0], clock[1]);
+                active--;
+
+            }
+
+        }
+
+    }
 };
 

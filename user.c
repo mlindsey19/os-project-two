@@ -35,6 +35,5 @@ int main(int argc, char * argv[])
     while(simclock[0] <= stopTime0 && simclock[1] < stopTime1 );
     printf("pid: %u sim clock: %is %in - terminating now\n",  getpid(),simclock[0], simclock[1]);
 
-
     exit(19);
 }
